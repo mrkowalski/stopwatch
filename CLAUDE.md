@@ -23,9 +23,10 @@ as a Cloudflare Workers static-asset site.
   `@font-face` blocks near the top. Use targeted edits, and when reading the file skip or truncate
   those lines (`sed -n '150,310p'`, `cut -c1-200`) so they don't flood context. The subsets exist
   to enable the `zero` (slashed-zero) feature; changing the font stack means regenerating them.
-- **The live host can be the newer copy.** The `fetch from hosting` commit pulled `index.html` down
-  from the deployed site rather than pushing to it. Don't assume git is ahead of production; ask
-  before overwriting.
+- **git is the source of truth.** It was not always: the `fetch from hosting` commit pulled
+  `index.html` down from the deployed site rather than pushing to it, so anything before
+  `wrangler and gh deploy` predates automated deploys. From that commit on, `main` is what
+  production serves — see Deploying.
 
 ## Deploying
 
