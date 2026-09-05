@@ -5,18 +5,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A full-screen clock + stopwatch page, deployed at https://stopwatch.mkcg.pl. The whole app is
-`index.html` — one self-contained file with inline `<style>` and `<script>`, no build step, no
-dependencies, no package manager, no tests, no CI.
+`public/index.html` — one self-contained file with inline `<style>` and `<script>`, no build
+step, no runtime dependencies, no tests. The only tooling is wrangler, which publishes `public/`
+as a Cloudflare Workers static-asset site.
 
 ## Working on it
 
-- **Run it:** open `index.html` in a browser. Prefer serving it (`python3 -m http.server 8000`)
-  when touching the Wake Lock or Fullscreen paths — the Screen Wake Lock API is unavailable over
+- **Run it:** open `public/index.html` in a browser. Prefer serving it (`npm run dev`, or
+  `python3 -m http.server 8000 -d public`) when touching the Wake Lock or Fullscreen paths — the
+  Screen Wake Lock API is unavailable over
   `file://` and the code silently swallows that failure, so bugs there are invisible unless served
   from `localhost`/https.
 - **Verify by hand:** start/pause/reset, minute rollover, night mode, fullscreen, the keyboard
   shortcuts, and the 3-second idle fade. There is no automated harness.
-- **Never rewrite `index.html` wholesale.** Two `@font-face` rules embed base64-encoded WOFF2
+- **Never rewrite `public/index.html` wholesale.** Two `@font-face` rules embed base64-encoded WOFF2
   subsets of JetBrains Mono (~40KB of the file's 44KB) on the `src:` lines inside the two
   `@font-face` blocks near the top. Use targeted edits, and when reading the file skip or truncate
   those lines (`sed -n '150,310p'`, `cut -c1-200`) so they don't flood context. The subsets exist
@@ -24,6 +26,21 @@ dependencies, no package manager, no tests, no CI.
 - **The live host can be the newer copy.** The `fetch from hosting` commit pulled `index.html` down
   from the deployed site rather than pushing to it. Don't assume git is ahead of production; ask
   before overwriting.
+
+## Deploying
+
+`wrangler.toml` defines a code-less Worker (no `main`) that serves `public/` as static assets on
+the custom domain `stopwatch.mkcg.pl`, with `workers_dev = false` so there is no second URL.
+Everything in `public/` is published; nothing outside it is.
+
+- **CI does it.** `.github/workflows/deploy.yml` runs `wrangler deploy` on every push to `main`
+  that touches a non-`.md` file, and on manual dispatch. It needs two repo secrets:
+  `CLOUDFLARE_API_TOKEN` (Workers Scripts:Edit on the account, plus Zone:Read and Workers
+  Routes:Edit on `mkcg.pl` for the custom domain) and `CLOUDFLARE_ACCOUNT_ID`.
+- **By hand:** `npm run deploy`, after `wrangler login`. Both must run on a real machine — the
+  sandboxed container has no Cloudflare credentials and no egress to `api.cloudflare.com`.
+- **Version pin appears twice:** `wranglerVersion` in the workflow and the `wrangler`
+  devDependency in `package.json`. Bump them together.
 
 ## Architecture
 

@@ -1,0 +1,20 @@
+# Static-asset Worker serving the contents of ./public
+# Deploy:  npm run deploy   (or `wrangler deploy`)
+#
+# No `main` key: this Worker has no code of its own, it only serves the
+# asset directory. Top-level keys must stay above the [assets] table —
+# in TOML anything after a table header belongs to that table.
+name = "stopwatch"
+compatibility_date = "2026-09-05"
+
+# Reached at its own hostname only; no stopwatch.<subdomain>.workers.dev copy.
+workers_dev = false
+
+[assets]
+directory = "./public"
+# Unknown paths get a plain 404 rather than index.html.
+not_found_handling = "none"
+
+[[routes]]
+pattern = "stopwatch.mkcg.pl"
+custom_domain = true

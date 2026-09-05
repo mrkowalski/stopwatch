@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    # Docs-only pushes don't change what is served.
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+# Never let two deploys race; the newest push wins.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Keep in sync with the wrangler devDependency in package.json;
+          # the action installs its own copy and defaults to an older major.
+          wranglerVersion: "4.129.0"

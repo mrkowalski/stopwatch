@@ -1,0 +1,13 @@
+{
+  "name": "stopwatch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-screen clock and stopwatch, served from Cloudflare Workers static assets.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.129.0"
+  }
+}
