@@ -4,25 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A full-screen clock + stopwatch page, deployed at https://stopwatch.mkcg.pl. The whole app is
-`public/index.html` — one self-contained file with inline `<style>` and `<script>`, no build
-step, no runtime dependencies, no tests. The only tooling is wrangler, which publishes `public/`
-as a Cloudflare Workers static-asset site.
+A full-screen clock + stopwatch page, deployed at https://stopwatch.mkcg.pl. The app is
+`public/index.html` — markup, inline `<style>` and inline `<script>` in one ~10KB file — plus two
+WOFF2 subsets in `public/fonts/`. No build step, no runtime dependencies, no tests. The only
+tooling is wrangler, which publishes `public/` as a Cloudflare Workers static-asset site.
 
 ## Working on it
 
 - **Run it:** open `public/index.html` in a browser. Prefer serving it (`npm run dev`, or
   `python3 -m http.server 8000 -d public`) when touching the Wake Lock or Fullscreen paths — the
-  Screen Wake Lock API is unavailable over
-  `file://` and the code silently swallows that failure, so bugs there are invisible unless served
-  from `localhost`/https.
+  Screen Wake Lock API is unavailable over `file://` and the code silently swallows that
+  failure, so bugs there are invisible unless served from `localhost`/https.
 - **Verify by hand:** start/pause/reset, minute rollover, night mode, fullscreen, the keyboard
   shortcuts, and the 3-second idle fade. There is no automated harness.
-- **Never rewrite `public/index.html` wholesale.** Two `@font-face` rules embed base64-encoded WOFF2
-  subsets of JetBrains Mono (~40KB of the file's 44KB) on the `src:` lines inside the two
-  `@font-face` blocks near the top. Use targeted edits, and when reading the file skip or truncate
-  those lines (`sed -n '150,310p'`, `cut -c1-200`) so they don't flood context. The subsets exist
-  to enable the `zero` (slashed-zero) feature; changing the font stack means regenerating them.
+- **The fonts live in `public/fonts/`, not in the HTML.** Two `@font-face` rules load
+  `jetbrains-mono-400.woff2` and `jetbrains-mono-500.woff2` by relative URL, with matching
+  `<link rel="preload">` hints in `<head>` — keep the two in sync or the browser fetches twice.
+  They used to be base64 data URLs, which made the file 44KB and unreadable in full; it is ~10KB
+  now, so read it normally. The subsets exist to enable the `zero` (slashed-zero) feature;
+  changing the font stack means regenerating them, and the relative URLs keep `file://` working.
 - **git is the source of truth.** It was not always: the `fetch from hosting` commit pulled
   `index.html` down from the deployed site rather than pushing to it, so anything before
   `wrangler and gh deploy` predates automated deploys. From that commit on, `main` is what
